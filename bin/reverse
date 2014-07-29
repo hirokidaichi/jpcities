@@ -1,0 +1,35 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+
+use TokyoCabinet;
+use Geo::Hash::XS;
+use Encode qw/decode/;
+use JSON qw/encode_json/;
+my ($la,$lo) = @ARGV;
+
+my $hdb = TokyoCabinet::HDB->new;
+my $geo = Geo::Hash::XS->new;
+
+$hdb->open("./tc/geohash6.tch") or die;
+
+sub reverse_geocoding{
+    my ($la,$lo) = @_;
+    my $d =  $geo->encode($la,$lo,6);
+    my $items =  decode("utf8",$hdb->get($d));
+    my ($pref,$dist,$city) = split /,/,$items;
+    #print $items;
+    return encode_json({
+        prefecture => $pref,
+        district => $dist,
+        city => $city,
+        });
+
+
+}
+#binmode( STDOUT,":utf8");
+
+# print reverse_geocoding(qw/35.658852 139.7075565/);
+# print reverse_geocoding(qw/35.5427774 139.44508/);
+
+print reverse_geocoding($la,$lo);
